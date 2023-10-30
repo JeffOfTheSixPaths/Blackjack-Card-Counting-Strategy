@@ -3,6 +3,7 @@ import random
 from Game import *
 from Hyperparams import *
 import copy
+import concurrent.futures
 
 class Player:
     def __init__(self, card_count: dict, bet_func, prob_tol):
@@ -84,7 +85,7 @@ hilo = {
 }
 
 for key in hilo:
-    hilo[key] *= 100
+    hilo[key] = np.random.randint(-100, 100)
 bet = [[1, 1], [2,2]]
 pt = 1
 
@@ -111,10 +112,14 @@ def evaluate(agent, deck = Deck()):
 
 population = [Player(hilo, bet, pt) for _ in range(pop_size)]
 
+import multiprocessing
+pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+
 for gen in range(num_generations):
     for agent in population:
         agent.money = 300
-    fitness_scores = [evaluate(agent) for agent in population]
+    #fitness_scores = [evaluate(agent) for agent in population]
+    fitness_scores = pool.map(evaluate, population)
     # Select the best agent
     best_agent_idx = np.argmax(fitness_scores)
     best_agent = copy.deepcopy(population[best_agent_idx])
