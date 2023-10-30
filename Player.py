@@ -5,8 +5,8 @@ from Hyperparams import *
 import copy
 
 class Player:
-    def __init__(self, card_count, bet_func, prob_tol):
-        self.Q = np.zeros((31, 12, 41, 2 + max_bet)) # card amount, face up, card count, actions + bet
+    def __init__(self, card_count: dict, bet_func, prob_tol):
+        self.Q = np.zeros((31, 12, 2001, 2 + max_bet)) # card amount, face up, card count, actions + bet
         self.player_count = 0
         self.dealer_count = 0
         self.card_count = card_count
@@ -57,6 +57,12 @@ class Player:
     
     def mutate(self):
         self.Q += MUTATION_RATE * np.random.randn(*self.Q.shape)
+        cc = self.card_count
+
+        for key in cc:
+            cc[key] +=  np.random.randint(-10,10)
+        print(cc) #breaks the thing because it's a float
+        self.card_count = cc
         return 0
         
 
@@ -76,6 +82,9 @@ hilo = {
     'A':-1,
     
 }
+
+for key in hilo:
+    hilo[key] *= 100
 bet = [[1, 1], [2,2]]
 pt = 1
 

@@ -92,7 +92,7 @@ class Game:
             while not done:
                 # Adjust count based on player's hand
                 player.count += player.get_count_value(player.player_count)
-                player.count = min(max(player.count, -20), 20)  # Clamp count to range [-20, 20]
+                player.count = min(max(player.count, -1000), 1000)  # Clamp count to range [-20, 20]
 
                 action = player.action()
                 if action == 0 and player.player_count <= 21:
@@ -127,7 +127,7 @@ class Game:
         player.dealer_count = 0
         player.player_count = 0
         reward = player.get_reward(player.player_count, player.dealer_count, bet)
-
+        #print(player.card_count)
         player.Q[player.player_count, dealer_card, player.count, action] = (1 - learning_rate) * player.Q[player.player_count, player.dealer_count, player.count, action] + \
                                           learning_rate * (reward + discount_factor * np.max(player.Q[player.player_count, dealer_card, player.count]))
         return player.money
