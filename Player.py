@@ -66,39 +66,6 @@ class Player:
         self.card_count = cc
         return 0
         
-
-hilo = {
-    '2':1,
-    '3':1,
-    '4':1,
-    '5':1,
-    '6':1,
-    '7':0,
-    '8':0,
-    '9':0,
-    'T':-1,
-    'J':-1,
-    'Q':-1,
-    'K':-1,
-    'A':-1,
-    
-}
-
-for key in hilo:
-    hilo[key] = np.random.randint(-100, 100)
-bet = [[1, 1], [2,2]]
-pt = 1
-
-p = Player(hilo, bet, pt)
-deck = Deck()
-g = Game(p, deck.deck)
-#print(deck.unshuffled_deck)
-for _ in range(num_episodes):
-    g.play_shoe(p, deck)
-print("\n\nMoney amount:" + str(p.money))
-p#rint("counting start" +  str(p.card_count))
-start_time = time.time()
-
 def evaluate(agent, deck = Deck()):
     total_reward = 0
     for i in range(num_episodes):
@@ -110,26 +77,60 @@ def evaluate(agent, deck = Deck()):
     #print(f'{total_reward} {init_money} {mon}')
     return total_reward/num_episodes
 
-population = [Player(hilo, bet, pt) for _ in range(pop_size)]
+if __name__ == '__main__':
+    hilo = {
+        '2':1,
+        '3':1,
+        '4':1,
+        '5':1,
+        '6':1,
+        '7':0,
+        '8':0,
+        '9':0,
+        'T':-1,
+        'J':-1,
+        'Q':-1,
+        'K':-1,
+        'A':-1,
+        
+    }
 
-import multiprocessing
-pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    for key in hilo:
+        hilo[key] = np.random.randint(-100, 100)
+    bet = [[1, 1], [2,2]]
+    pt = 1
 
-for gen in range(num_generations):
-    for agent in population:
-        agent.money = 300
-    #fitness_scores = [evaluate(agent) for agent in population]
-    fitness_scores = pool.map(evaluate, population)
-    # Select the best agent
-    best_agent_ids = np.argsort(fitness_scores)[top_n]
-    best_agents = [copy.deepcopy(population[i]) for i in range(top_n)]
+    p = Player(hilo, bet, pt)
+    deck = Deck()
+    g = Game(p, deck.deck)
+    #print(deck.unshuffled_deck)
+    for _ in range(num_episodes):
+        g.play_shoe(p, deck)
+    print("\n\nMoney amount:" + str(p.money))
+    p#rint("counting start" +  str(p.card_count))
+    start_time = time.time()
 
-    # Mutate the population based on the best agent
-    population = best_agents*5
-    for agent in population:
-        agent.mutate()
 
-    print(f"Generation {gen+1}, Fitness: {fitness_scores[np.argmax(fitness_scores)]}")
+    population = [Player(hilo, bet, pt) for _ in range(pop_size)]
 
-end_time = time.time()
-print(f' time is : {end_time - start_time}')
+    import multiprocessing
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+
+    for gen in range(num_generations):
+        for agent in population:
+            agent.money = 300
+        #fitness_scores = [evaluate(agent) for agent in population]
+        fitness_scores = pool.map(evaluate, population)
+        # Select the best agent
+        best_agent_ids = np.argsort(fitness_scores)[top_n]
+        best_agents = [copy.deepcopy(population[i]) for i in range(top_n)]
+
+        # Mutate the population based on the best agent
+        population = best_agents*5
+        for agent in population:
+            agent.mutate()
+
+        print(f"Generation {gen+1}, Fitness: {fitness_scores[np.argmax(fitness_scores)]}")
+
+    end_time = time.time()
+    print(f' time is : {end_time - start_time}')
