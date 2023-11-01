@@ -3,7 +3,8 @@ import random
 from Game import *
 from Hyperparams import *
 import copy
-
+import concurrent.futures
+import time
 class Player:
     def __init__(self, card_count: dict, bet_func, prob_tol):
         self.Q = np.zeros((31, 12, 2001, 2 + max_bet)) # card amount, face up, card count, actions + bet
@@ -64,40 +65,8 @@ class Player:
         print(cc) #breaks the thing because it's a float
         self.card_count = cc
         return 0
-        
 
-hilo = {
-    '2':1,
-    '3':1,
-    '4':1,
-    '5':1,
-    '6':1,
-    '7':0,
-    '8':0,
-    '9':0,
-    'T':-1,
-    'J':-1,
-    'Q':-1,
-    'K':-1,
-    'A':-1,
-    
-}
-
-for key in hilo:
-    hilo[key] *= 100
-bet = [[1, 1], [2,2]]
-pt = 1
-
-p = Player(hilo, bet, pt)
-deck = Deck()
-g = Game(p, deck.deck)
-#print(deck.unshuffled_deck)
-for _ in range(num_episodes):
-    g.play_shoe(p, deck)
-print("\n\nMoney amount:" + str(p.money))
-p#rint("counting start" +  str(p.card_count))
-
-
+ 
 def evaluate(agent, deck = Deck()):
     total_reward = 0
     for i in range(num_episodes):
@@ -109,19 +78,60 @@ def evaluate(agent, deck = Deck()):
     #print(f'{total_reward} {init_money} {mon}')
     return total_reward/num_episodes
 
-population = [Player(hilo, bet, pt) for _ in range(pop_size)]
+if __name__ == '__main__':
+    start_time = time.time()
+    hilo = {
+        '2':1,
+        '3':1,
+        '4':1,
+        '5':1,
+        '6':1,
+        '7':0,
+        '8':0,
+        '9':0,
+        'T':-1,
+        'J':-1,
+        'Q':-1,
+        'K':-1,
+        'A':-1,
+        
+    }
 
-for gen in range(num_generations):
-    for agent in population:
-        agent.money = 300
-    fitness_scores = [evaluate(agent) for agent in population]
-    # Select the best agent
-    best_agent_idx = np.argmax(fitness_scores)
-    best_agent = copy.deepcopy(population[best_agent_idx])
+    for key in hilo:
+        hilo[key] = np.random.randint(-100, 100)
+    bet = [[1, 1], [2,2]]
+    pt = 1
 
-    # Mutate the population based on the best agent
-    population = [copy.deepcopy(best_agent) for _ in range(pop_size)]
-    for agent in population:
-        agent.mutate()
+    p = Player(hilo, bet, pt)
+    deck = Deck()
+    g = Game(p, deck.deck)
+    #print(deck.unshuffled_deck)
+    for _ in range(num_episodes):
+        g.play_shoe(p, deck)
+    print("\n\nMoney amount:" + str(p.money))
+    p#rint("counting start" +  str(p.card_count))
 
-    print(f"Generation {gen+1}, Fitness: {fitness_scores[best_agent_idx]}")
+
+
+    population = [Player(hilo, bet, pt) for _ in range(pop_size)]
+
+    import multiprocessing
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    print(pool._processes)
+    for gen in range(num_generations):
+        for agent in population:
+            agent.money = 300
+        #fitness_scores = [evaluate(agent) for agent in population]
+        fitness_scores = pool.map(evaluate, population)
+        # Select the best agent
+        best_agent_idx = np.argmax(fitness_scores)
+        best_agent = copy.deepcopy(population[best_agent_idx])
+
+        # Mutate the population based on the best agent
+        population = [copy.deepcopy(best_agent) for _ in range(pop_size)]
+        for agent in population:
+            agent.mutate()
+
+        print(f"Generation {gen+1}, Fitness: {fitness_scores[best_agent_idx]}")
+    end_time = time.time()
+    print(f"time {end_time - start_time}")
