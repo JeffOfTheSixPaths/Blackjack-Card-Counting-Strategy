@@ -4,7 +4,7 @@ from Game import *
 from Hyperparams import *
 import copy
 import concurrent.futures
-
+import time
 class Player:
     def __init__(self, card_count: dict, bet_func, prob_tol):
         self.Q = np.zeros((31, 12, 2001, 2 + max_bet)) # card amount, face up, card count, actions + bet
@@ -97,7 +97,7 @@ for _ in range(num_episodes):
     g.play_shoe(p, deck)
 print("\n\nMoney amount:" + str(p.money))
 p#rint("counting start" +  str(p.card_count))
-
+start_time = time.time()
 
 def evaluate(agent, deck = Deck()):
     total_reward = 0
@@ -121,12 +121,15 @@ for gen in range(num_generations):
     #fitness_scores = [evaluate(agent) for agent in population]
     fitness_scores = pool.map(evaluate, population)
     # Select the best agent
-    best_agent_idx = np.argmax(fitness_scores)
-    best_agent = copy.deepcopy(population[best_agent_idx])
+    best_agent_ids = np.argsort(fitness_scores)[top_n]
+    best_agents = [copy.deepcopy(population[i]) for i in range(top_n)]
 
     # Mutate the population based on the best agent
-    population = [copy.deepcopy(best_agent) for _ in range(pop_size)]
+    population = best_agents*5
     for agent in population:
         agent.mutate()
 
-    print(f"Generation {gen+1}, Fitness: {fitness_scores[best_agent_idx]}")
+    print(f"Generation {gen+1}, Fitness: {fitness_scores[np.argmax(fitness_scores)]}")
+
+end_time = time.time()
+print(f' time is : {end_time - start_time}')
