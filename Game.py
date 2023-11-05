@@ -4,13 +4,18 @@ from Hyperparams import *
 class Deck:
     def __init__(self):
         self.unshuffled_deck = ['AC', 'AS', 'AD', 'AH', '2C', '2S', '2D', '2H', '3C', '3S', '3D', '3H', '4C', '4S', '4D', '4H', '5C', '5S', '5D', '5H', '6C', '6S', '6D', '6H', '7C', '7S', '7D', '7H', '8C', '8S', '8D', '8H', '9C', '9S', '9D', '9H','TC', 'TS', 'TD', 'TH', 'JC', 'JS', 'JD', 'JH', 'QC', 'QS', 'QD', 'QH', 'KC', 'KS', 'KD', 'KH']
-        self.deck = self.unshuffled_deck
+        self.deck = self.unshuffled_deck[:]
         shuffle(self.deck)
         self.played_cards = []
     
     def draw_card(self):
         #print(self.deck)
-        card = self.deck.pop(0)
+        try:
+            card = self.deck.pop(0)
+        except:
+            self.deck = self.unshuffled_deck[:]
+            shuffle(self.deck)
+            card = self.deck.pop(0)
         self.played_cards.append(card)
         return card
     
@@ -92,7 +97,7 @@ class Game:
             while not done:
                 # Adjust count based on player's hand
                 player.count += player.get_count_value(player.player_count)
-                player.count = min(max(player.count, -1000), 1000)  # Clamp count to range [-20, 20]
+                player.count = min(max(player.count, -1 * count_size), count_size)  # Clamp count to range [-20, 20]
 
                 action = player.action()
                 if action == 0 and player.player_count <= 21:
@@ -128,6 +133,7 @@ class Game:
         player.player_count = 0
         reward = player.get_reward(player.player_count, player.dealer_count, bet)
         #print(player.card_count)
+        player.count = min(max(player.count, -1 * count_size), count_size)
         player.Q[player.player_count, dealer_card, player.count, action] = (1 - learning_rate) * player.Q[player.player_count, player.dealer_count, player.count, action] + \
                                           learning_rate * (reward + discount_factor * np.max(player.Q[player.player_count, dealer_card, player.count]))
         return player.money

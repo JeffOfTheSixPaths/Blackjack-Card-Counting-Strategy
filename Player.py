@@ -7,7 +7,7 @@ import concurrent.futures
 import time
 class Player:
     def __init__(self, card_count: dict, bet_func, prob_tol):
-        self.Q = np.zeros((31, 12, 2001, 2 + max_bet)) # card amount, face up, card count, actions + bet
+        self.Q = np.zeros((31, 12, 2*count_size + 1, 2 + max_bet)) # card amount, face up, card count, actions + bet
         self.player_count = 0
         self.dealer_count = 0
         self.card_count = card_count
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     }
 
     for key in hilo:
-        hilo[key] = np.random.randint(-100, 100)
+        hilo[key] = np.random.randint(-1 * int(count_size/10), int(count_size/10))
     bet = [[1, 1], [2,2]]
     pt = 1
 
@@ -119,14 +119,14 @@ if __name__ == '__main__':
     for gen in range(num_generations):
         for agent in population:
             agent.money = 300
-        #fitness_scores = [evaluate(agent) for agent in population]
-        fitness_scores = pool.map(evaluate, population)
+        fitness_scores = [evaluate(agent) for agent in population]
+        #fitness_scores = pool.map(evaluate, population)
         # Select the best agent
-        best_agent_ids = np.argsort(fitness_scores)[top_n]
-        best_agents = [copy.deepcopy(population[i]) for i in range(top_n)]
+        best_agent_ids = np.argsort(fitness_scores)[top_n-1:]
+        best_agents = [copy.deepcopy(population[i]) for i in best_agent_ids]
 
         # Mutate the population based on the best agent
-        population = best_agents*5
+        population = best_agents* int(pop_size/top_n)
         for agent in population:
             agent.mutate()
 
